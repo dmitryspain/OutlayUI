@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { foldTop } from '../core/aggregate';
 import { assignSlots } from '../core/category';
+import { BudgetService } from '../core/budget.service';
 import { CardsService } from '../core/cards.service';
 import { FeedService } from '../core/feed.service';
 import { cardTag, currencySymbol, formatMoney } from '../core/format';
@@ -16,6 +17,7 @@ import { BarChartComponent, BarDatum } from '../shared/bar-chart.component';
 import { ConnectPanelComponent } from '../shared/connect-panel.component';
 import { IconComponent } from '../shared/icon.component';
 import { KpiComponent } from '../shared/kpi.component';
+import { MeterComponent } from '../shared/meter.component';
 import { MoneyComponent } from '../shared/money.component';
 import { PeriodPickerComponent } from '../shared/period-picker.component';
 import { RankedItem, RankedListComponent } from '../shared/ranked-list.component';
@@ -33,7 +35,7 @@ import { dailyBars, opsLabel, toRankedItems, toSegments } from '../shared/view-m
   imports: [
     RouterLink, IconComponent, MoneyComponent, KpiComponent, SparklineComponent, BarChartComponent, ShareBarComponent,
     RankedListComponent, TxRowComponent, PeriodPickerComponent, SegmentedComponent, EmptyStateComponent,
-    ErrorStateComponent, ConnectPanelComponent, TPipe, TpPipe,
+    ErrorStateComponent, ConnectPanelComponent, MeterComponent, TPipe, TpPipe,
   ],
   template: `
     <div class="page">
@@ -133,6 +135,29 @@ import { dailyBars, opsLabel, toRankedItems, toSegments } from '../shared/view-m
               <app-kpi [label]="'ov.kpi.perDay' | t" [value]="feed.avgDaily()" [delta]="feed.deltas().avg" polarity="down-good" [series]="expenseSeries()" [caption]="vs()" />
             </div>
 
+            @if (budgets.hasBudgets() && budgets.ready()) {
+              <a class="card budget" routerLink="/budgets" aria-labelledby="bud-h">
+                <div class="bud-top">
+                  <h2 class="card-title" id="bud-h">{{ 'ov.bud.title' | t }}</h2>
+                  @if (budgets.atRisk(); as n) {
+                    <span class="pill warn"><app-icon name="alert" [size]="13" /> {{ n | tp: 'plural.atRisk' }}</span>
+                  } @else {
+                    <span class="pill pos"><app-icon name="check" [size]="13" /> {{ 'ov.bud.allOk' | t }}</span>
+                  }
+                  <app-icon class="go" name="chevron-right" [size]="18" />
+                </div>
+                @if (budgets.total(); as bt) {
+                  @if (bt.limit !== null) {
+                    <div class="bud-line">
+                      <span><app-money [value]="bt.spent" [decimals]="0" /> <span class="muted">{{ 'bud.of' | t: { limit: money0(bt.limit) } }}</span></span>
+                      <span class="muted">{{ 'bud.forecast' | t: { amount: money0(bt.forecast) } }}</span>
+                    </div>
+                    <app-meter [value]="bt.used" [level]="bt.level" [pace]="budgetPace()" />
+                  }
+                }
+              </a>
+            }
+
             <section class="card fill-card s-8" aria-labelledby="daily-h">
               <div class="card-head">
                 <div>
@@ -171,7 +196,18 @@ import { dailyBars, opsLabel, toRankedItems, toSegments } from '../shared/view-m
               <app-ranked-list [items]="merchantItems()" marker="avatar" (pick)="openMerchant($event)" />
             </section>
 
-            <section class="card s-6" aria-labelledby="rec-h">
+            <section class="card s-6" aria-labelledby="snd-h">
+              <div class="card-head">
+                <div><h2 class="card-title" id="snd-h">{{ 'ov.snd.title' | t }}</h2><p class="card-sub">{{ 'ov.snd.sub' | t }}</p></div>
+              </div>
+              @if (senderItems().length) {
+                <app-ranked-list [items]="senderItems()" marker="avatar" tone="income" (pick)="openMerchant($event)" />
+              } @else {
+                <p class="muted">{{ 'ov.snd.none' | t }}</p>
+              }
+            </section>
+
+            <section class="card" aria-labelledby="rec-h">
               <div class="card-head">
                 <div><h2 class="card-title" id="rec-h">{{ 'ov.rec.title' | t }}</h2><p class="card-sub">{{ 'ov.rec.sub' | t: { n: recent().length } }}</p></div>
                 <div class="card-actions"><a class="btn btn-ghost btn-sm" routerLink="/transactions">{{ 'common.all' | t }} <app-icon name="arrow-right" [size]="16" /></a></div>
@@ -197,6 +233,12 @@ import { dailyBars, opsLabel, toRankedItems, toSegments } from '../shared/view-m
       .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
       @container page (max-width: 440px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
       .recent { display: grid; }
+      .budget { display: grid; gap: 10px; color: inherit; text-decoration: none; transition: border-color var(--dur-1) var(--ease); }
+      .budget:hover { border-color: var(--edge-strong); }
+      .bud-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+      .bud-top .go { margin-left: auto; color: var(--ink-3); }
+      .bud-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; font-weight: 650; }
+      .bud-line .muted { font-weight: 500; }
       .welcome { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; padding: clamp(20px, 4vw, 36px); }
       .w-main { display: grid; gap: 14px; align-content: start; }
       .w-main h2 { font-size: var(--fs-2xl); max-width: 22ch; }
@@ -216,6 +258,7 @@ export class OverviewPage {
   protected readonly period = inject(PeriodService);
   protected readonly prefs = inject(PrefsService);
   protected readonly sync = inject(SyncService);
+  protected readonly budgets = inject(BudgetService);
   private readonly router = inject(Router);
 
   protected readonly greeting = computed(() => {
@@ -229,6 +272,7 @@ export class OverviewPage {
     { value: 'table', label: translate('view.table') },
   ]);
   protected readonly view = signal<'chart' | 'table'>('chart');
+  protected readonly budgetPace = computed(() => this.budgets.month().day / this.budgets.month().days);
   protected readonly money0 = (v: number): string => formatMoney(v, { decimals: 0 });
 
   protected readonly txCount = computed(() => opsLabel(this.feed.totals().count));
@@ -248,6 +292,7 @@ export class OverviewPage {
   protected readonly catSegments = computed(() => toSegments(this.catFolded(), this.catSlots()));
   protected readonly catItems = computed(() => toRankedItems(this.catFolded(), this.catSlots(), { categories: true }));
   protected readonly merchantItems = computed(() => toRankedItems(this.feed.expensesByMerchant().slice(0, 6)));
+  protected readonly senderItems = computed(() => toRankedItems(this.feed.incomeByMerchant().slice(0, 6)));
   protected readonly recent = computed(() => this.feed.txns().slice(0, 8));
 
   protected setView(v: string): void {

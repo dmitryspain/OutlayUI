@@ -25,6 +25,11 @@ export const demoInterceptor: HttpInterceptorFn = (req, next) => {
     case '/clients/update-balance':
     case '/transactions/latest':
       return reply({});
+    case '/clients/webhook':
+      return reply({ configured: false, enabled: false });
+    case '/transactions/backfill':
+      // the demo feed already holds half a year
+      return reply({ state: 'done', progress: 1, imported: 0, oldestLoaded: null, etaSeconds: null, error: null });
     case '/transactions/by-period': {
       const card = req.params.get('clientCardId') ?? DEMO_CARDS[0].id;
       const from = new Date(req.params.get('dateFrom') ?? 0);

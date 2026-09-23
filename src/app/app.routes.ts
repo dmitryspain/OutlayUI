@@ -15,6 +15,8 @@ export const routes: Routes = [
   { path: 'transactions', title: 'nav.transactions', loadComponent: () => import('./pages/transactions.page').then(m => m.TransactionsPage) },
   { path: 'weekly', title: 'nav.weekly', loadComponent: () => import('./pages/weekly.page').then(m => m.WeeklyPage) },
   { path: 'merchant', title: 'route.merchant', loadComponent: () => import('./pages/merchant.page').then(m => m.MerchantPage) },
+  { path: 'budgets', title: 'nav.budgets', loadComponent: () => import('./pages/budgets.page').then(m => m.BudgetsPage) },
+  { path: 'subscriptions', title: 'nav.subs', loadComponent: () => import('./pages/subscriptions.page').then(m => m.SubscriptionsPage) },
   { path: 'cards', title: 'nav.cards', loadComponent: () => import('./pages/cards.page').then(m => m.CardsPage) },
   { path: 'settings', title: 'nav.settings', loadComponent: () => import('./pages/settings.page').then(m => m.SettingsPage) },
 

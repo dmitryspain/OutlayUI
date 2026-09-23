@@ -36,6 +36,8 @@ export class SyncService {
   readonly lastError = signal<ApiError | null>(null);
 
   private sub?: Subscription;
+  /** the bank pushes transactions (and balances) live, so the periodic balance poll is not needed */
+  private live = false;
 
   constructor() {
     effect(
@@ -54,6 +56,16 @@ export class SyncService {
     interval(BALANCE_REFRESH_MS)
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
       .subscribe(() => this.refreshBalance());
+  }
+
+  setLive(on: boolean): void {
+    this.live = on;
+  }
+
+  /** New data arrived from elsewhere (a live event): refetch without asking the bank. */
+  bump(): void {
+    this.version.update(v => v + 1);
+    this.cards.reload();
   }
 
   /** Manual refresh (top-bar button, command palette). */
@@ -110,7 +122,7 @@ export class SyncService {
 
   private refreshBalance(): void {
     const token = this.session.token();
-    if (!token || document.hidden) return;
+    if (!token || document.hidden || this.live) return;
     this.api
       .updateBalance(token)
       .pipe(catchError(() => of(null)))

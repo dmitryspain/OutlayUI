@@ -7,11 +7,13 @@ import { LANGS } from '../i18n/lang';
 import { TPipe } from '../i18n/pipes';
 import { translate } from '../i18n/translate';
 import { Density, Motion, PrefsService } from '../core/prefs.service';
+import { LiveService } from '../core/live.service';
 import { SessionService } from '../core/session.service';
 import { SyncService } from '../core/sync.service';
 import { ACCENT_PRESETS, DEFAULT_HUES, THEMES, ThemeChoice } from '../core/themes';
 import { ToastService } from '../core/toast.service';
 import { ConnectPanelComponent } from '../shared/connect-panel.component';
+import { HistoryLoaderComponent } from '../shared/history-loader.component';
 import { IconComponent } from '../shared/icon.component';
 import { SegmentedComponent } from '../shared/segmented.component';
 import { ThemePreviewComponent } from '../shared/theme-preview.component';
@@ -20,7 +22,7 @@ import { ThemePreviewComponent } from '../shared/theme-preview.component';
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, SegmentedComponent, ThemePreviewComponent, ConnectPanelComponent, TPipe],
+  imports: [IconComponent, SegmentedComponent, ThemePreviewComponent, ConnectPanelComponent, TPipe, HistoryLoaderComponent],
   template: `
     <div class="page">
       <header class="page-head">
@@ -116,6 +118,44 @@ import { ThemePreviewComponent } from '../shared/theme-preview.component';
         }
       </section>
 
+      <section class="card" aria-labelledby="lv-h">
+        <div class="card-head"><div><h2 class="card-title" id="lv-h">{{ 'st.live.title' | t }}</h2><p class="card-sub">{{ 'st.live.text' | t }}</p></div></div>
+
+        <div class="setting">
+          <div>
+            <h3>Webhook</h3>
+            <p class="muted">
+              @if (session.demo() || !session.connected()) {
+                {{ 'st.live.unavailable' | t }}
+              } @else if (live.webhook()?.enabled) {
+                {{ 'st.live.on' | t }} · {{ (live.connected() ? 'st.live.streamOn' : 'st.live.streamOff') | t }}
+              } @else if (live.webhook() && !live.webhook()!.configured) {
+                {{ 'st.live.notConfigured' | t }}
+              } @else {
+                {{ (live.connected() ? 'st.live.streamOn' : 'st.live.streamOff') | t }}
+              }
+            </p>
+          </div>
+          @if (live.webhook()?.enabled) {
+            <span class="pill pos"><app-icon name="zap" [size]="14" /> {{ 'st.live.on' | t }}</span>
+          } @else {
+            <button
+              type="button" class="btn btn-sm btn-primary" (click)="live.enableWebhook()"
+              [disabled]="live.enabling() || session.demo() || !session.connected() || live.webhook()?.configured === false"
+            >
+              <app-icon name="zap" [size]="16" /> {{ 'st.live.enable' | t }}
+            </button>
+          }
+        </div>
+        <div class="setting col">
+          <div>
+            <h3>{{ 'st.hist.title' | t }}</h3>
+            <p class="muted">{{ 'st.hist.text' | t }}</p>
+          </div>
+          <app-history-loader />
+        </div>
+      </section>
+
       <section class="card" aria-labelledby="dt-h">
         <div class="card-head"><div><h2 class="card-title" id="dt-h">{{ 'st.data.title' | t }}</h2></div></div>
 
@@ -201,6 +241,7 @@ export class SettingsPage {
   protected readonly prefs = inject(PrefsService);
   protected readonly session = inject(SessionService);
   protected readonly sync = inject(SyncService);
+  protected readonly live = inject(LiveService);
   private readonly toast = inject(ToastService);
   protected readonly i18n = inject(I18nService);
 

@@ -68,6 +68,7 @@ export class FeedService {
 
   readonly expensesByCategory = computed(() => rank(this.txns(), 'category', 'expense'));
   readonly expensesByMerchant = computed(() => rank(this.txns(), 'merchant', 'expense'));
+  readonly incomeByMerchant = computed(() => rank(this.txns(), 'merchant', 'income'));
 
   readonly avgDaily = computed(() => this.totals().expenses / Math.max(1, this.buckets().length));
   readonly prevAvgDaily = computed(() => this.prevTotals().expenses / Math.max(1, this.prevBuckets().length));

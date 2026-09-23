@@ -24,6 +24,35 @@ export interface Txn {
   icon: string;
 }
 
+export type BackfillState = 'idle' | 'running' | 'done' | 'failed';
+
+/** Loading of older history from the bank (the backend walks back one statement request per minute). */
+export interface BackfillStatus {
+  state: BackfillState;
+  /** 0..1 */
+  progress: number;
+  imported: number;
+  /** how far back the stored history now reaches */
+  oldestLoaded: Date | null;
+  /** rough seconds left */
+  etaSeconds: number | null;
+  error: string | null;
+}
+
+export interface WebhookStatus {
+  /** the server has a public URL it can give Monobank */
+  configured: boolean;
+  /** Monobank pushes this client's transactions to us */
+  enabled: boolean;
+}
+
+/** A transaction pushed by the bank a moment ago (server-sent event). */
+export interface LiveTxn {
+  description: string;
+  amount: number;
+  date: Date;
+}
+
 /** Inclusive range: `from` is a start of day, `to` is an end of day. */
 export interface DateRange {
   from: Date;

@@ -22,6 +22,8 @@ const ITEMS: readonly NavItem[] = [
   { path: '/home', label: 'nav.overview', icon: 'dashboard' },
   { path: '/transactions', label: 'nav.transactions', icon: 'list' },
   { path: '/weekly', label: 'nav.weekly', icon: 'calendar' },
+  { path: '/budgets', label: 'nav.budgets', icon: 'wallet' },
+  { path: '/subscriptions', label: 'nav.subs', icon: 'repeat' },
   { path: '/cards', label: 'nav.cards', icon: 'card' },
   { path: '/settings', label: 'nav.settings', icon: 'sliders' },
 ];
@@ -129,6 +131,8 @@ const ITEMS: readonly NavItem[] = [
 
       /* phone: bottom tab bar */
       @media (max-width: 719px) {
+        /* the host has a view-transition-name, i.e. its own stacking context: lift the host itself above the page */
+        :host { position: relative; z-index: 30; }
         .nav {
           position: fixed; inset: auto 0 0 0; z-index: 30; height: auto; flex-direction: row; justify-content: center;
           padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
@@ -136,11 +140,12 @@ const ITEMS: readonly NavItem[] = [
           -webkit-backdrop-filter: none; backdrop-filter: none;
         }
         .brand, .foot { display: none; }
-        .items { grid-template-columns: repeat(5, 1fr); width: 100%; max-width: 520px; gap: 2px; }
+        .items { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: 100%; max-width: 620px; gap: 2px; }
         .it {
           flex-direction: column; justify-content: center; gap: 3px; width: auto; height: 56px; padding: 0;
           font-size: 11px; border-radius: var(--radius-m);
         }
+        .lb { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .lb { display: block; }
         :host-context([data-theme='terminal']) .it.on::before { display: none; }
       }

@@ -134,6 +134,8 @@ export class CommandPaletteComponent {
       { id: 'go-home', group: 'pal.group.go', label: translate('nav.overview'), icon: 'dashboard', keywords: 'home головна dashboard', run: this.go('/home') },
       { id: 'go-tx', group: 'pal.group.go', label: translate('nav.transactions'), icon: 'list', keywords: 'transactions операції', run: this.go('/transactions') },
       { id: 'go-weekly', group: 'pal.group.go', label: translate('nav.weekly'), icon: 'calendar', keywords: 'weekly дні тижня календар', run: this.go('/weekly') },
+      { id: 'go-budgets', group: 'pal.group.go', label: translate('nav.budgets'), icon: 'wallet', keywords: 'budgets бюджет ліміт limit', run: this.go('/budgets') },
+      { id: 'go-subs', group: 'pal.group.go', label: translate('nav.subs'), icon: 'repeat', keywords: 'subscriptions підписки регулярні recurring', run: this.go('/subscriptions') },
       { id: 'go-cards', group: 'pal.group.go', label: translate('nav.cards'), icon: 'card', keywords: 'cards обрати карту', run: this.go('/cards') },
       { id: 'go-settings', group: 'pal.group.go', label: translate('nav.settings'), icon: 'sliders', keywords: 'settings токен тема вигляд', run: this.go('/settings') },
       { id: 'sync', group: 'pal.group.actions', label: translate('pal.sync'), icon: 'refresh', keywords: 'оновити refresh sync', run: () => this.sync.refresh() },

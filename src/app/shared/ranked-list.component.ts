@@ -43,7 +43,7 @@ export interface RankedItem {
                 <span class="name trunc">{{ it.label }}</span>
                 <app-money class="val" [value]="it.amount" [decimals]="0" />
               </span>
-              <span class="track"><i class="fill" [style.width.%]="it.rel * 100" [style.--c]="marker === 'dot' ? colour(it) : null"></i></span>
+              <span class="track"><i class="fill" [style.width.%]="it.rel * 100" [style.--c]="marker === 'dot' ? colour(it) : tone === 'income' ? 'var(--pos)' : null"></i></span>
               <span class="l2">{{ pct(it.share) }} · {{ it.sub }}</span>
             </span>
           </button>
@@ -78,6 +78,8 @@ export interface RankedItem {
 export class RankedListComponent {
   @Input({ required: true }) items: readonly RankedItem[] = [];
   @Input() marker: 'avatar' | 'dot' = 'avatar';
+  /** `income`: bars take the positive-money colour */
+  @Input() tone: 'default' | 'income' = 'default';
   @Output() pick = new EventEmitter<RankedItem>();
 
   protected pct(share: number): string {

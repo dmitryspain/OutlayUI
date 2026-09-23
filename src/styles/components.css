@@ -110,6 +110,7 @@
 }
 .pill.pos { background: var(--pos-soft); color: var(--pos); }
 .pill.neg { background: var(--neg-soft); color: var(--neg); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
 
 /* ---- segmented control with a sliding thumb ---------------------------- */
 .seg {

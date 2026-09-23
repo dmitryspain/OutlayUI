@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, inject } fro
 import { RouterOutlet } from '@angular/router';
 import { PrefsService } from './core/prefs.service';
 import { TPipe } from './i18n/pipes';
+import { BudgetService } from './core/budget.service';
+import { LiveService } from './core/live.service';
 import { SyncService } from './core/sync.service';
 import { CardSwitcherComponent } from './layout/card-switcher.component';
 import { CommandPaletteComponent } from './layout/command-palette.component';
@@ -48,9 +50,11 @@ export class AppComponent {
   @ViewChild('main', { static: true }) private main!: ElementRef<HTMLElement>;
 
   constructor() {
-    // instantiate the services that must run from startup: theme application and background sync
+    // instantiate the services that must run from startup: theme, background sync, live events, budget alerts
     inject(PrefsService);
     inject(SyncService);
+    inject(LiveService);
+    inject(BudgetService);
   }
 
   /** `#main` would resolve against <base href="/"> and navigate away, so focus it by hand. */

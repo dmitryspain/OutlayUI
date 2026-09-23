@@ -18,6 +18,7 @@
   --accent-text: oklch(var(--accent-text-l) var(--accent-text-c) var(--accent-h));
   --pos-soft: color-mix(in oklab, var(--pos) 16%, transparent);
   --neg-soft: color-mix(in oklab, var(--neg) 14%, transparent);
+  --warn-soft: color-mix(in oklab, var(--warn) 16%, transparent);
   --focus: var(--accent-text);
 
   /* card / control outline (Brutal overrides these to be thick and black) */
