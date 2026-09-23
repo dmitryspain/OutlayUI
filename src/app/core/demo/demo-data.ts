@@ -5,9 +5,9 @@ import { addDays, dowMon0, startOfDay, toApiDate } from '../format';
 /** Deterministic sample data for demo mode — same shape as the real API, generated locally. */
 
 export const DEMO_CARDS = [
-  { id: 'demo-black-0001', balance: 4123655, currencyCode: 980, type: 'black', maskedCardNumber: '5375 41** **** 4821' },
-  { id: 'demo-white-0002', balance: 812000, currencyCode: 980, type: 'white', maskedCardNumber: '4441 11** **** 0937' },
-  { id: 'demo-platinum-0003', balance: 15020, currencyCode: 980, type: 'platinum', maskedCardNumber: '5168 74** **** 6650' },
+  { id: 'demo-black-0001', balance: 41236.55, currencyCode: 980, type: 'black', maskedCardNumber: '5375 41** **** 4821' },
+  { id: 'demo-white-0002', balance: 8120, currencyCode: 980, type: 'white', maskedCardNumber: '4441 11** **** 0937' },
+  { id: 'demo-platinum-0003', balance: 150.2, currencyCode: 980, type: 'platinum', maskedCardNumber: '5168 74** **** 6650' },
 ];
 
 export const DEMO_CARD_ID = DEMO_CARDS[0].id;
@@ -48,12 +48,20 @@ const TEXT = {
   uk: {
     salary: 'Зарплата · ТОВ «Нова Ера»', advance: 'Аванс · ТОВ «Нова Ера»', rent: 'Іван Петренко', from: 'Від',
     people: ['Олена Коваль', 'Максим Бондаренко', 'Ірина Шевченко', 'Андрій Мельник'],
+    notes: ['За квитки', 'Борг за піцу', 'На подарунок', 'Дякую!'],
   },
   en: {
     salary: 'Salary · New Era LLC', advance: 'Advance · New Era LLC', rent: 'Ivan Petrenko', from: 'From',
     people: ['Olena Koval', 'Maksym Bondarenko', 'Iryna Shevchenko', 'Andrii Melnyk'],
+    notes: ['For the tickets', 'Pizza money', 'For the gift', 'Thanks!'],
   },
 } as const;
+
+/** "Ірина Шевченко" → "Ірина Ш." — how the bank writes the sender in a transfer's description. */
+const shortName = (full: string): string => {
+  const [first, last] = full.split(' ');
+  return last ? `${first} ${last[0]}.` : first;
+};
 
 /** mulberry32 — tiny seeded PRNG */
 function rng(seed: number): () => number {
@@ -74,6 +82,10 @@ export interface DemoTxnDto {
   icon: string;
   amount: number;
   balanceAfter: number;
+  counterName: string | null;
+  comment: string | null;
+  cashback: number;
+  hold: boolean;
 }
 
 const HISTORY_DAYS = 180;
@@ -96,7 +108,10 @@ function generate(cardId: string): DemoTxnDto[] {
     const dom = day.getDate();
     const weekend = dowMon0(day) >= 5;
 
-    const push = (description: string, category: string, amount: number, hour?: number) => {
+    const push = (
+      description: string, category: string, amount: number, hour?: number,
+      extra: { counterName?: string; comment?: string } = {},
+    ) => {
       const at = new Date(
         day.getFullYear(), day.getMonth(), day.getDate(),
         hour ?? 8 + Math.floor(rand() * 14), Math.floor(rand() * 60), Math.floor(rand() * 60),
@@ -110,6 +125,12 @@ function generate(cardId: string): DemoTxnDto[] {
         icon: '',
         amount,
         balanceAfter: 0,
+        counterName: extra.counterName ?? null,
+        comment: extra.comment ?? null,
+        // like a real card: 1 % back on purchases, nothing on transfers
+        cashback: amount < 0 && category !== TRANSFER_CATEGORY ? Math.round(-amount) / 100 : 0,
+        // the last couple of hours are still being processed by the bank
+        hold: amount < 0 && now.getTime() - at.getTime() < 2 * 3_600_000,
       });
     };
 
@@ -127,8 +148,16 @@ function generate(cardId: string): DemoTxnDto[] {
       push(nameOf(spec), spec.category, -money(spec.min + (spec.max - spec.min) * rand() ** 1.8));
     }
 
-    if (rand() < 0.07 * intensity) push(`${L.from}: ${pick(L.people)}`, TRANSFER_CATEGORY, money(300 + rand() * 2700));
-    if (rand() < 0.06 * intensity) push(pick(L.people), TRANSFER_CATEGORY, -money(200 + rand() * 1800));
+    if (rand() < 0.07 * intensity) {
+      // the bank shortens the name in the description and gives it in full separately
+      const person = pick(L.people);
+      push(`${L.from}: ${shortName(person)}`, TRANSFER_CATEGORY, money(300 + rand() * 2700), undefined,
+        { counterName: person, comment: rand() < 0.5 ? pick(L.notes) : undefined });
+    }
+    if (rand() < 0.06 * intensity) {
+      const person = pick(L.people);
+      push(person, TRANSFER_CATEGORY, -money(200 + rand() * 1800), undefined, { counterName: person });
+    }
   }
 
   return out.sort((a, b) => (a.dateOccured < b.dateOccured ? 1 : -1));

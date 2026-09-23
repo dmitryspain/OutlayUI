@@ -11,16 +11,20 @@ export interface Totals {
   income: number;
   net: number;
   count: number;
+  /** cashback earned on these transactions */
+  cashback: number;
 }
 
 export function totals(txns: readonly Txn[]): Totals {
   let expenses = 0;
   let income = 0;
+  let cashback = 0;
   for (const t of txns) {
     if (t.amount < 0) expenses += -t.amount;
     else income += t.amount;
+    cashback += t.cashback ?? 0;
   }
-  return { expenses, income, net: income - expenses, count: txns.length };
+  return { expenses, income, net: income - expenses, count: txns.length, cashback };
 }
 
 export interface DayBucket {
@@ -50,6 +54,12 @@ export function dayBuckets(txns: readonly Txn[], range: DateRange): DayBucket[] 
   return [...map.values()];
 }
 
+/**
+ * Who a transaction is with: for a transfer the bank's own name of the other party (the description is
+ * often just "Від: Ірина Ш."), otherwise the merchant as described.
+ */
+export const payeeOf = (t: Pick<Txn, 'counterName' | 'description'>): string => t.counterName || t.description;
+
 export interface Ranked {
   key: string;
   label: string;
@@ -71,7 +81,7 @@ export function rank(txns: readonly Txn[], by: 'category' | 'merchant', kind: Ki
     if ((kind === 'expense') !== t.amount < 0) continue;
     const amount = Math.abs(t.amount);
     total += amount;
-    const key = by === 'category' ? t.category : t.description;
+    const key = by === 'category' ? t.category : payeeOf(t);
     let r = map.get(key);
     if (!r) {
       r = { key, label: key, amount: 0, count: 0, share: 0, category: t.category, icon: '' };

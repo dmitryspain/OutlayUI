@@ -21,9 +21,9 @@ export const demoInterceptor: HttpInterceptorFn = (req, next) => {
   switch (path) {
     case '/clients/cards':
       return reply(DEMO_CARDS);
-    case '/clients/register':
-    case '/clients/update-balance':
+    case '/clients/balance/refresh':
     case '/transactions/latest':
+    case '/auth/session':
       return reply({});
     case '/clients/webhook':
       return reply({ configured: false, enabled: false });

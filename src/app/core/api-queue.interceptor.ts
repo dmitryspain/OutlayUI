@@ -4,13 +4,11 @@ import { Observable, Subscription, identity, retry, throwError, timer } from 'rx
 import { API_BASE_URL } from './config';
 
 /**
- * The backend registers its DbContext as a singleton, and EF Core contexts are not safe for
- * concurrent use — parallel requests come back as 500/503. So calls to the API go through a
- * one-at-a-time queue (the data the screen is waiting on goes first), and transient 5xx on
- * read-only calls are retried a couple of times. Fixing the backend registration makes this
- * unnecessary, but it is harmless (and useful against a flaky network) either way.
+ * Calls to the API go through a small queue: the data the screen is waiting on goes first, and
+ * transient 5xx on reads are retried a couple of times. (It used to allow a single request at a time,
+ * because the backend shared one non-thread-safe DbContext; that is fixed, so a few run in parallel.)
  */
-const MAX_IN_FLIGHT = 1;
+export const MAX_IN_FLIGHT = 4;
 const RETRIES = 3;
 
 /** lower runs first: the feed the UI is waiting on, then cards, then background sync */
@@ -46,8 +44,8 @@ const isTransient = (e: unknown): boolean => e instanceof HttpErrorResponse && (
 export const apiQueueInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.startsWith(inject(API_BASE_URL))) return next(req);
 
-  // only what the screen is waiting on is retried (both are pure reads; `cards` merely happens to be a POST).
-  // Background sync is not: a retry loop would hold the single queue slot and delay the data people are waiting for.
+  // only what the screen is waiting on is retried (both are pure reads).
+  // Background sync is not: it talks to the bank, whose once-a-minute limit a retry would only hit again.
   const repeatable = req.url.includes('/transactions/by-period') || req.url.includes('/clients/cards');
 
   return new Observable<HttpEvent<unknown>>(subscriber => {

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, of, switchMap } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { PrefsService } from '../core/prefs.service';
 import { toApiError } from '../core/query';
+import { errorText } from '../i18n/errors';
 import { SessionService } from '../core/session.service';
 import { ToastService } from '../core/toast.service';
 import { TPipe } from '../i18n/pipes';
@@ -11,8 +11,8 @@ import { MessageKey, translate } from '../i18n/translate';
 import { IconComponent } from './icon.component';
 
 /**
- * Connect a Monobank token. The token is validated by actually fetching the cards with it;
- * it is only stored once that works (the old form stored whatever was typed).
+ * Connect a Monobank token. It is sent once, in the request body; the backend checks it with the bank
+ * and answers with a session for this browser. The token itself is never stored in the browser.
  */
 @Component({
   selector: 'app-connect-panel',
@@ -46,7 +46,7 @@ import { IconComponent } from './icon.component';
           <app-icon name="alert" [size]="20" />
           <div>
             <p><strong>{{ error()! | t }}</strong></p>
-            <p class="muted">{{ 'conn.hint' | t }}</p>
+            <p class="muted">{{ serverError() || ('conn.hint' | t) }}</p>
           </div>
         </div>
       }
@@ -74,6 +74,8 @@ export class ConnectPanelComponent {
   protected readonly token = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal<MessageKey | null>(null);
+  /** what the server said (e.g. "Монобанк не прийняв токен"), when it said something */
+  protected readonly serverError = signal('');
 
   protected val(e: Event): string {
     return (e.target as HTMLInputElement).value;
@@ -85,28 +87,24 @@ export class ConnectPanelComponent {
     if (!token || this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
-
-    this.api
-      .register(token)
-      // an already-registered client may be rejected by register — the cards call below is the real test
-      .pipe(
-        catchError(() => of(null)),
-        switchMap(() => this.api.cards(token)),
-      )
-      .subscribe({
-        next: cards => {
-          this.busy.set(false);
-          this.prefs.setDemo(false);
-          this.session.setToken(token);
-          this.token.set('');
-          this.toast.show(translate(cards.length ? 'conn.ok' : 'conn.okNoCards'), 'success');
-          this.connected.emit();
-          void this.router.navigateByUrl('/cards');
-        },
-        error: err => {
-          this.busy.set(false);
-          this.error.set(toApiError(err).offline ? 'conn.offline' : 'conn.fail');
-        },
-      });
+    this.serverError.set('');
+    // the backend checks the token with the bank and answers with a session; the token itself is not kept here
+    this.api.connect(token).subscribe({
+      next: c => {
+        this.busy.set(false);
+        this.prefs.setDemo(false);
+        this.session.setSession(c);
+        this.token.set('');
+        this.toast.show(translate(c.cardId ? 'conn.ok' : 'conn.okNoCards'), 'success');
+        this.connected.emit();
+        void this.router.navigateByUrl('/cards');
+      },
+      error: err => {
+        this.busy.set(false);
+        const apiError = toApiError(err);
+        this.error.set(apiError.offline ? 'conn.offline' : 'conn.fail');
+        this.serverError.set(apiError.offline ? '' : apiError.code || apiError.serverMessage ? errorText(apiError) : '');
+      },
+    });
   }
 }

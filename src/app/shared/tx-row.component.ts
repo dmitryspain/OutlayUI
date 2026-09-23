@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { formatShortDate, formatTime } from '../core/format';
+import { payeeOf } from '../core/aggregate';
+import { formatMoney, formatShortDate, formatTime } from '../core/format';
 import { Txn } from '../core/models';
-import { CatPipe } from '../i18n/pipes';
+import { CatPipe, TPipe } from '../i18n/pipes';
 import { AvatarComponent } from './avatar.component';
 import { MoneyComponent } from './money.component';
 
@@ -11,15 +12,21 @@ import { MoneyComponent } from './money.component';
   selector: 'app-tx-row',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AvatarComponent, MoneyComponent, RouterLink, CatPipe],
+  imports: [AvatarComponent, MoneyComponent, RouterLink, CatPipe, TPipe],
   template: `
-    <a class="tx" [routerLink]="['/merchant']" [queryParams]="{ name: tx.description }">
-      <app-avatar [category]="tx.category" [description]="tx.description" [icon]="tx.icon" [size]="40" />
+    <a class="tx" [routerLink]="['/merchant']" [queryParams]="{ name: payee }">
+      <app-avatar [category]="tx.category" [description]="payee" [icon]="tx.icon" [size]="40" />
       <span class="main">
-        <span class="d trunc">{{ tx.description }}</span>
-        <span class="s trunc">{{ tx.category | cat }} · {{ when }}</span>
+        <span class="d trunc">{{ payee }}</span>
+        <span class="s trunc">
+          @if (tx.hold) { <span class="hold">{{ 'tx.hold' | t }}</span> }
+          {{ tx.category | cat }} · {{ when }}@if (tx.comment) { · «{{ tx.comment }}» }
+        </span>
       </span>
-      <app-money class="amt" [value]="tx.amount" [signed]="true" tone="sign" [decimals]="2" />
+      <span class="end">
+        <app-money class="amt" [value]="tx.amount" [signed]="true" tone="sign" [decimals]="2" />
+        @if (tx.cashback > 0) { <span class="cb">+{{ cashback }} {{ 'tx.cashback' | t }}</span> }
+      </span>
     </a>
   `,
   styles: [
@@ -35,6 +42,12 @@ import { MoneyComponent } from './money.component';
       .d { font-weight: 600; }
       .s { color: var(--ink-3); font-size: var(--fs-sm); }
       .amt { font-weight: 650; font-variant-numeric: tabular-nums; }
+      .end { display: grid; justify-items: end; }
+      .cb { font-size: var(--fs-xs); color: var(--pos); }
+      .hold {
+        display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 999px;
+        background: var(--warn-soft); color: var(--warn); font-size: var(--fs-xs); font-weight: 650;
+      }
     `,
   ],
 })
@@ -42,6 +55,15 @@ export class TxRowComponent {
   @Input({ required: true }) tx!: Txn;
   /** 'time' for lists already grouped by day; 'datetime' for mixed lists */
   @Input() dateMode: 'time' | 'datetime' = 'time';
+
+  /** for a transfer, the other party's name as the bank has it */
+  protected get payee(): string {
+    return payeeOf(this.tx);
+  }
+
+  protected get cashback(): string {
+    return formatMoney(this.tx.cashback, { decimals: 2 });
+  }
 
   protected get when(): string {
     const time = formatTime(this.tx.date);

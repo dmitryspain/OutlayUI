@@ -100,11 +100,11 @@ import { ThemePreviewComponent } from '../shared/theme-preview.component';
       <section class="card" aria-labelledby="mb-h">
         <div class="card-head"><div><h2 class="card-title" id="mb-h">Monobank</h2><p class="card-sub">{{ 'st.mono.sub' | t }}</p></div></div>
 
-        @if (session.savedToken()) {
+        @if (session.hasSession()) {
           <div class="callout">
             <app-icon name="shield" [size]="20" />
             <div class="grow">
-              <p><strong>{{ 'st.mono.saved' | t }}</strong> · <code>{{ masked() }}</code></p>
+              <p><strong>{{ 'st.mono.saved' | t }}</strong></p>
               <p class="muted">{{ 'st.mono.savedNote' | t }}</p>
             </div>
             <button type="button" class="btn btn-sm btn-danger" (click)="disconnect()"><app-icon name="log-out" [size]="16" /> {{ 'st.mono.disconnect' | t }}</button>
@@ -263,10 +263,6 @@ export class SettingsPage {
   ]);
 
   protected readonly hue = computed(() => this.prefs.accent() ?? DEFAULT_HUES[this.prefs.resolvedTheme()]);
-  protected readonly masked = computed(() => {
-    const t = this.session.savedToken();
-    return t.length > 8 ? `${t.slice(0, 2)}••••••••${t.slice(-3)}` : '••••••';
-  });
   protected readonly syncText = computed(() => {
     if (this.sync.syncing()) return translate('top.syncing');
     const err = this.sync.lastError();

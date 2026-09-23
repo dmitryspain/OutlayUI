@@ -2,16 +2,14 @@
 export interface Card {
   id: string;
   balance: number;
+  creditLimit: number;
   currencyCode: number;
   /** black | white | platinum | iron | fop | yellow | eAid … (lower-cased) */
   type: string;
   maskedNumber: string;
 }
 
-/**
- * One transaction. `amount` < 0 is money out, > 0 is money in.
- * The backend sends a zero GUID as `id` and an empty `icon`, so `key` is derived from the content.
- */
+/** One transaction. `amount` < 0 is money out, > 0 is money in. `key` is the backend id (or, from older backends, derived from the content). */
 export interface Txn {
   key: string;
   date: Date;
@@ -22,6 +20,13 @@ export interface Txn {
   amount: number;
   /** icon URL sent by the backend, '' when there is none */
   icon: string;
+  /** the other party of a transfer as the bank names it, '' when none */
+  counterName: string;
+  /** the note on a transfer, '' when none */
+  comment: string;
+  cashback: number;
+  /** the bank has not finished processing it yet */
+  hold: boolean;
 }
 
 export type BackfillState = 'idle' | 'running' | 'done' | 'failed';

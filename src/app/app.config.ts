@@ -3,6 +3,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { PreloadAllModules, TitleStrategy, provideRouter, withComponentInputBinding, withPreloading, withViewTransitions } from '@angular/router';
 import { provideStore } from '@ngrx/store';
 import { apiQueueInterceptor } from './core/api-queue.interceptor';
+import { authInterceptor } from './core/auth.interceptor';
 import { demoInterceptor } from './core/demo/demo.interceptor';
 import { AppTitleStrategy } from './core/title.strategy';
 import { loadState } from './localStorage/local-storage';
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
       withPreloading(PreloadAllModules), // lazy pages are fetched right after start, so navigation is instant
     ),
     // demo answers locally first; everything that still goes to the backend is queued (see the interceptor)
-    provideHttpClient(withInterceptors([demoInterceptor, apiQueueInterceptor])),
+    provideHttpClient(withInterceptors([demoInterceptor, authInterceptor, apiQueueInterceptor])),
     // the same store + persistence as before, so an already-saved token and card keep working
     provideStore({ card: cardReducer, token: tokenReducer }, { metaReducers, initialState: loadState() }),
     { provide: TitleStrategy, useClass: AppTitleStrategy },

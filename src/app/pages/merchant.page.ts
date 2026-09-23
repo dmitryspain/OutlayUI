@@ -109,7 +109,7 @@ export class MerchantPage {
   protected readonly money0 = (v: number): string => formatMoney(v, { decimals: 0 });
 
   // independent of the "without transfers" switch: a person is a transfer by definition
-  protected readonly txns = computed(() => this.feed.allTxns().filter(x => x.description === this.who()));
+  protected readonly txns = computed(() => this.feed.allTxns().filter(x => x.description === this.who() || x.counterName === this.who()));
   protected readonly category = computed(() => this.txns()[0]?.category ?? '');
   // as before: a transfer always wears the transfer picture, whatever icon the backend attached
   protected readonly icon = computed(() => (this.category() === TRANSFER_CATEGORY ? '' : (this.txns().find(x => x.icon)?.icon ?? '')));

@@ -4,9 +4,12 @@ import {
 import { dayKey } from './format';
 import { Txn } from './models';
 
-const tx = (iso: string, amount: number, description = 'Shop', category = 'Cat', icon = ''): Txn => {
+const tx = (iso: string, amount: number, description = 'Shop', category = 'Cat', icon = '', extra: Partial<Txn> = {}): Txn => {
   const date = new Date(iso);
-  return { key: `${iso}|${description}|${amount}`, date, day: dayKey(date), description, category, amount, icon };
+  return {
+    key: `${iso}|${description}|${amount}`, date, day: dayKey(date), description, category, amount, icon,
+    counterName: '', comment: '', cashback: 0, hold: false, ...extra,
+  };
 };
 
 // Mon 21 Sep 2026 is the newest day; the feed is sorted newest-first, like the API layer guarantees
@@ -20,7 +23,22 @@ const range = { from: new Date(2026, 8, 18), to: new Date(2026, 8, 21, 23, 59, 5
 
 describe('aggregate', () => {
   it('totals: gross expenses, gross income, net', () => {
-    expect(totals(feed)).toEqual({ expenses: 175, income: 300, net: 125, count: 4 });
+    expect(totals(feed)).toEqual({ expenses: 175, income: 300, net: 125, count: 4, cashback: 0 });
+  });
+
+  it('totals: adds up cashback', () => {
+    const withCashback = [tx('2026-09-21T12:00:00', -100, 'Glovo', 'Food', '', { cashback: 1.5 }), tx('2026-09-21T13:00:00', -10, 'X', 'Y', '', { cashback: 0.1 })];
+    expect(totals(withCashback).cashback).toBeCloseTo(1.6);
+  });
+
+  it('rank by merchant: transfers are grouped by the name the bank gives the other party', () => {
+    const list = [
+      tx('2026-09-21T12:00:00', 500, 'Від: Ірина Ш.', 'Transfer', '', { counterName: 'Ірина Шевченко' }),
+      tx('2026-09-20T12:00:00', 300, 'Від: Ірина Ш.', 'Transfer', '', { counterName: 'Ірина Шевченко' }),
+      tx('2026-09-19T12:00:00', 100, 'Від: Ірина Ш.', 'Transfer'),
+    ];
+    const ranked = rank(list, 'merchant', 'income');
+    expect(ranked.map(r => [r.label, r.amount])).toEqual([['Ірина Шевченко', 800], ['Від: Ірина Ш.', 100]]);
   });
 
   it('dayBuckets: one bucket per day of the range, empty days included', () => {

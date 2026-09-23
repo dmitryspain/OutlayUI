@@ -11,6 +11,10 @@ const tx = (description: string, amount: number, date: Date, category = 'Циф�
   category,
   amount,
   icon: '',
+  counterName: '',
+  comment: '',
+  cashback: 0,
+  hold: false,
 });
 const d = (y: number, m: number, day: number, h = 10) => new Date(y, m - 1, day, h);
 const now = d(2026, 9, 23, 12);

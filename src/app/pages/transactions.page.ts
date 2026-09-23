@@ -172,7 +172,7 @@ export class TransactionsPage {
         (!day || t.day === day) &&
         (!cat || t.category === cat) &&
         (type === 'all' || (type === 'expense' ? t.amount < 0 : t.amount > 0)) &&
-        (!q || t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)),
+        (!q || [t.description, t.counterName, t.comment, t.category].some(f => f.toLowerCase().includes(q))),
     );
   });
 

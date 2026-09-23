@@ -46,14 +46,15 @@ export class LiveService {
   constructor() {
     effect(() => {
       const card = this.session.demo() ? '' : this.session.cardId();
-      untracked(() => this.open(card));
+      const token = this.session.accessToken();
+      untracked(() => this.open(token ? card : ''));
     });
 
     effect(() => {
-      const token = this.session.demo() ? '' : this.session.token();
+      const token = this.session.demo() ? '' : this.session.accessToken();
       untracked(() => {
         this.webhook.set(null);
-        if (token) this.api.webhookStatus(token).subscribe({ next: s => this.webhook.set(s), error: () => undefined });
+        if (token) this.api.webhookStatus().subscribe({ next: s => this.webhook.set(s), error: () => undefined });
       });
     });
 
@@ -74,10 +75,9 @@ export class LiveService {
 
   /** Ask Monobank to push transactions to the backend as they happen. */
   enableWebhook(): void {
-    const token = this.session.token();
-    if (!token || this.enabling()) return;
+    if (!this.session.accessToken() || this.enabling()) return;
     this.enabling.set(true);
-    this.api.registerWebhook(token).subscribe({
+    this.api.registerWebhook().subscribe({
       next: () => {
         this.enabling.set(false);
         this.webhook.set({ configured: true, enabled: true });
@@ -107,7 +107,7 @@ export class LiveService {
 
     this.api.backfillStatus(card).subscribe({ next: s => this.backfill.set(s), error: () => undefined });
 
-    const es = new EventSource(this.api.eventsUrl(card));
+    const es = new EventSource(this.api.eventsUrl(card, this.session.accessToken()));
     this.source = es;
     es.onopen = () => {
       this.connected.set(true);
@@ -131,9 +131,13 @@ export class LiveService {
   }
 
   private onTransaction(data: string): void {
-    const d = this.parse<{ description?: string; amount?: number; dateOccured?: string }>(data);
+    const d = this.parse<{ description?: string; counterName?: string | null; amount?: number; dateOccured?: string }>(data);
     if (!d) return;
-    const txn: LiveTxn = { description: d.description ?? '', amount: d.amount ?? 0, date: new Date(d.dateOccured ?? Date.now()) };
+    const txn: LiveTxn = {
+      description: d.counterName?.trim() || d.description || '',
+      amount: d.amount ?? 0,
+      date: new Date(d.dateOccured ?? Date.now()),
+    };
     this.lastTxn.set(txn);
     this.toast.show(translate('live.txn', { amount: formatMoney(txn.amount, { signed: true }), name: txn.description }), 'info', 6000);
     this.sync.bump();

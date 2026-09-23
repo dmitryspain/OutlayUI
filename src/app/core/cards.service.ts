@@ -11,7 +11,7 @@ export class CardsService {
 
   private readonly q = query(
     () => this.session.token() || null,
-    token => this.api.cards(token),
+    () => this.api.cards(),
     { key: token => token },
   );
 

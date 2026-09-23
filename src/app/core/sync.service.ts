@@ -14,6 +14,8 @@ import { ToastService } from './toast.service';
 /** Automatic syncs are spaced out: the bank rate-limits statements and the backend is slow to serve them. */
 const AUTO_SYNC_GAP_MS = 2 * 60_000;
 const STAMPS_KEY = 'outlay.lastSync.v1';
+/** error code the backend uses for Monobank's one-request-a-minute limit */
+const RATE_LIMITED = 'Monobank.RateLimited';
 
 /**
  * Keeps data fresh:
@@ -77,13 +79,12 @@ export class SyncService {
   private run(cardId: string, manual: boolean): void {
     this.sub?.unsubscribe();
     this.syncing.set(true);
-    const token = this.session.token();
     // an automatic sync waits a beat so the screen's own data request goes to the server first
     this.sub = (manual ? of(0) : timer(800))
       .pipe(
         switchMap(() => this.api.syncLatest(cardId)),
         // a balance hiccup must not fail the whole sync
-        switchMap(() => this.api.updateBalance(token).pipe(catchError(() => of(null)))),
+        switchMap(() => this.api.updateBalance().pipe(catchError(() => of(null)))),
         finalize(() => this.syncing.set(false)),
       )
       .subscribe({
@@ -98,6 +99,12 @@ export class SyncService {
         },
         error: e => {
           const error = toApiError(e);
+          // the bank's once-a-minute limit (e.g. right after connecting) is not a failure of an automatic sync
+          if (!manual && error.code === RATE_LIMITED) {
+            this.lastError.set(null);
+            this.version.update(v => v + 1);
+            return;
+          }
           this.lastError.set(error);
           if (manual) this.toast.show(translate('sync.fail', { error: errorText(error) }), 'error');
         },
@@ -121,10 +128,9 @@ export class SyncService {
   }
 
   private refreshBalance(): void {
-    const token = this.session.token();
-    if (!token || document.hidden || this.live) return;
+    if (!this.session.token() || document.hidden || this.live) return;
     this.api
-      .updateBalance(token)
+      .updateBalance()
       .pipe(catchError(() => of(null)))
       .subscribe(() => this.cards.reload());
   }

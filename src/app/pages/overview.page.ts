@@ -124,6 +124,9 @@ import { dailyBars, opsLabel, toRankedItems, toSegments } from '../shared/view-m
                 <span class="muted">{{ 'ov.netFlow' | t }}</span>
                 <app-money [value]="feed.totals().net" [signed]="true" tone="sign" [decimals]="0" />
               </div>
+              @if (feed.totals().cashback > 0) {
+                <div class="net cb"><span class="muted">{{ 'ov.cashback' | t }}</span><app-money [value]="feed.totals().cashback" [signed]="true" tone="sign" [decimals]="2" /></div>
+              }
               <app-sparkline [values]="feed.cumulativeNet()" [height]="72" />
               <p class="cap muted">{{ 'ov.cumNote' | t: { days: (period.days() | tp: 'plural.days') } }}</p>
             </section>

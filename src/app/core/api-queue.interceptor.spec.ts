@@ -1,7 +1,7 @@
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { apiQueueInterceptor } from './api-queue.interceptor';
+import { MAX_IN_FLIGHT, apiQueueInterceptor } from './api-queue.interceptor';
 
 const BASE = 'https://localhost:7016/api';
 
@@ -19,36 +19,43 @@ describe('apiQueueInterceptor', () => {
 
   afterEach(() => backend.verify());
 
-  it('sends one request at a time', () => {
-    http.get(`${BASE}/transactions/latest`).subscribe(); // takes the free slot
-    http.get(`${BASE}/clients/update-balance`).subscribe();
+  /** occupies every slot with a slow background call */
+  const fillSlots = () => {
+    for (let i = 0; i < MAX_IN_FLIGHT; i++) http.get(`${BASE}/transactions/latest?n=${i}`).subscribe();
+    return backend.match(r => r.url.includes('/transactions/latest'));
+  };
+
+  it(`sends at most ${MAX_IN_FLIGHT} requests at a time`, () => {
+    const busy = fillSlots();
+    http.get(`${BASE}/clients/balance/refresh`).subscribe();
     http.get(`${BASE}/transactions/by-period`).subscribe();
 
-    const inFlight = backend.match(() => true);
-    expect(inFlight.length).toBe(1);
-    expect(inFlight[0].request.url).toContain('/transactions/latest');
-    expect(backend.match(() => true).length).toBe(0); // the other two are queued, not sent
+    expect(busy.length).toBe(MAX_IN_FLIGHT);
+    expect(backend.match(() => true).length).toBe(0); // the other two wait
 
     // drain: the queue is shared by the whole module, so leave it idle for the next test
-    inFlight[0].flush({});
+    busy[0].flush({});
     backend.expectOne(`${BASE}/transactions/by-period`).flush([]);
-    backend.expectOne(`${BASE}/clients/update-balance`).flush({});
+    busy.slice(1).forEach(r => r.flush({}));
+    backend.expectOne(`${BASE}/clients/balance/refresh`).flush({});
   });
 
   it('runs waiting requests in priority order', fakeAsync(() => {
     const order: string[] = [];
     const track = (name: string) => () => order.push(name);
 
-    http.get(`${BASE}/transactions/latest`).subscribe(track('latest'));
-    http.get(`${BASE}/clients/update-balance`).subscribe(track('balance'));
+    const busy = fillSlots();
+    http.get(`${BASE}/clients/balance/refresh`).subscribe(track('balance'));
     http.get(`${BASE}/transactions/by-period`).subscribe(track('feed'));
 
-    backend.expectOne(`${BASE}/transactions/latest`).flush({});
+    busy[0].flush({});
     backend.expectOne(`${BASE}/transactions/by-period`).flush([]); // jumps ahead of the balance refresh
-    backend.expectOne(`${BASE}/clients/update-balance`).flush({});
+    busy[1].flush({});
+    backend.expectOne(`${BASE}/clients/balance/refresh`).flush({});
+    busy.slice(2).forEach(r => r.flush({}));
     tick();
 
-    expect(order).toEqual(['latest', 'feed', 'balance']);
+    expect(order).toEqual(['feed', 'balance']);
   }));
 
   it('retries a failed feed request (transient 5xx) and then succeeds', fakeAsync(() => {
