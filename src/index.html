@@ -1,17 +1,34 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk" data-theme="aurora">
 <head>
   <meta charset="utf-8">
-  <title>OutlayUI</title>
+  <title>Outlay</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#060913">
+  <meta name="description" content="Outlay — особиста аналітика витрат за карткою Monobank">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="any">
+  <script>
+    /* Apply the saved theme before first paint, so there is no flash of the wrong theme. */
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem('outlay.prefs.v1') || '{}');
+        var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var d = document.documentElement;
+        d.dataset.theme = p.theme && p.theme !== 'auto' ? p.theme : (dark ? 'aurora' : 'daylight');
+        d.lang = p.lang === 'en' ? 'en' : 'uk';
+        if (typeof p.accent === 'number') d.style.setProperty('--accent-h-user', String(p.accent));
+        if (p.density) d.dataset.density = p.density;
+        if (p.privacy) d.dataset.privacy = 'on';
+        if (p.motion) d.dataset.motion = p.motion;
+      } catch (e) { /* storage unavailable: defaults apply */ }
+    })();
+  </script>
 </head>
-<body class="mat-typography">
+<body>
   <app-root></app-root>
+  <noscript>Для роботи Outlay потрібен JavaScript. · Outlay needs JavaScript to run.</noscript>
 </body>
 </html>

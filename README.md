@@ -1,27 +1,66 @@
-# OutlayUI
+# Outlay UI
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.0.2.
+Особиста аналітика витрат за карткою Monobank. Angular 17 (standalone-компоненти, сигнали, новий control flow).
 
-## Development server
+```bash
+npm install
+npm start          # http://localhost:4200
+npm test           # юніт-тести (Karma); без вікна: npx ng test --watch=false --browsers=ChromeHeadless
+npm run build      # production-збірка
+```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Бекенд (`OutlayApp`) очікується на `https://localhost:7016/api`. Адреса задана в одному місці: `src/app/core/config.ts`.
 
-## Code scaffolding
+**Демо-режим** (Налаштування → Дані) підставляє згенеровані дані замість запитів до бекенду. Зручно для розробки та показу; токен і вибрана картка не змінюються.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Структура
 
-## Build
+```
+src/
+  styles/            дизайн-система: tokens → themes → base → components
+  app/
+    core/            дані та стан: api, feed (єдине джерело для всіх екранів), sync, prefs, period, demo…
+    shared/          UI-цеглинки: графіки (SVG), картка, аватар, сегментований перемикач, іконки…
+    layout/          оболонка: навігація (сайдбар → рейка → нижня панель), палітра ⌘K, перемикач картки
+    pages/           Огляд, Транзакції, Тижні, Отримувач, Картки, Налаштування
+    store/           NgRx (токен і картка; зберігається в localStorage, як і раніше)
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+**Один потік даних.** `FeedService` завантажує транзакції картки за вибраний період (і за попередній, для порівнянь).
+Усі суми, графіки й рейтинги на всіх екранах рахуються з нього чистими функціями (`core/aggregate.ts`), тому цифри завжди збігаються.
+Витрати й надходження — це сума від'ємних і додатних операцій, як раніше давав ендпоінт `grouped`.
 
-## Running unit tests
+## Теми
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Тема — це набір змінних CSS на `[data-theme="…"]` (`src/styles/themes.css`); компоненти читають лише змінні.
+Є п'ять тем (Aurora, Daylight, Ledger, Brutal, Terminal) і «Авто». Акцент задається кутом відтінку в OKLCH, тому контраст лишається передбачуваним у будь-якого кольору.
 
-## Running end-to-end tests
+Щоб додати тему:
+1. блок `[data-theme="my"]` у `themes.css` (скопіюйте найближчу тему й змініть значення);
+2. палітра графіків `--viz-*` — у групу для світлих або темних тем, і прогін `validate_palette.js`;
+3. запис у `THEMES` та `DEFAULT_HUES` (`src/app/core/themes.ts`), тип `ThemeId`;
+4. за потреби структурні дрібниці (рамки, шрифт, фон) — поруч у `themes.css` / `components.css`.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Превʼю в «Налаштуваннях» малюються справжніми змінними теми, тому окремого макета не потрібно.
 
-## Further help
+## Мови
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Інтерфейс українською та англійською; вибір — у Налаштуваннях (зберігається й виставляє `<html lang>`, заголовок вкладки теж перекладається).
+
+- Тексти: `src/app/i18n/messages/uk.ts` (джерело ключів) і `en.ts`. Англійський словник типізований під ті самі ключі, тож пропущений переклад не скомпілюється.
+- У шаблонах: `{{ 'nav.overview' | t }}`, множина `{{ n | tp: 'plural.ops' }}`; у TS: `translate('…')`, `translatePlural('…', n)`.
+- Числа, дати, відносний час: `core/format.ts` (локаль береться з мови). Назви категорій банку приходять українською; англійські переклади (усі 270 категорій) у `i18n/categories.ts`, для відображення — pipe `cat`.
+- Нова мова: словник у `i18n/messages/`, запис у `LANGS` (`i18n/lang.ts`), переклади категорій. Тест `i18n.spec.ts` перевіряє, що ключі й `{плейсхолдери}` збігаються у всіх словниках.
+
+## Іконки транзакцій
+
+Порядок: `icon` з бекенду (якщо реально завантажується) → векторна іконка за категорією (для переказів між людьми — ініціали).
+URL перевіряється один раз (`shared/icon-cache.service.ts`), тож мертве посилання не дає ні «битої» картинки, ні лавини 404 — просто показує векторну іконку.
+Локальний `assets/<категорія>.png`-фолбек навмисно прибрано (був неактуальний для частини категорій); файли в `src/assets` лишились на диску, просто більше не використовуються.
+
+## Про бекенд
+
+- `DbContext` зареєстрований як `Singleton` (`OutlayApp.Infrastructure/Database/DependencyInjection.cs`), а EF Core не підтримує паралельне використання: одночасні запити повертають 500/503.
+  Клієнт це обходить (`core/api-queue.interceptor.ts`: черга по одному запиту + повтор читань), але правильно виправити реєстрацію на бекенді.
+- `by-period` у `dateTo` без часу відсікає сьогоднішні операції, тому клієнт надсилає кінець дня.
+- Токен більше не зашитий у коді: фонове оновлення балансу використовує токен підключеного користувача.

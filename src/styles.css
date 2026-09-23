@@ -1,7 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
-@import 'tailwindcss/base';           /*@tailwind base;*/
-@import 'tailwindcss/components';     /*@tailwind components;*/
-@import 'tailwindcss/utilities';      /*@tailwind utilities;*/
-@import '@fortawesome/fontawesome-free/css/all.css';
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* Outlay design system — entry point.
+   tokens     : structural tokens (spacing, type, motion)
+   themes     : 5 themes as sets of tokens, scoped to [data-theme]
+   base       : reset, typography, focus, motion & view-transition rules
+   components : shared building blocks (cards, buttons, controls, layout) */
+@import './styles/tokens.css';
+@import './styles/themes.css';
+@import './styles/base.css';
+@import './styles/components.css';

@@ -1,0 +1,301 @@
+/* ==========================================================================
+   THEMES
+   A theme is only a set of design tokens. They are scoped to [data-theme]
+   (not :root), so a preview element can carry a *real* theme locally.
+
+   Accent colour is built in OKLCH: lightness/chroma are fixed per theme and
+   only the hue is user-controlled, so contrast stays predictable at any hue.
+   ========================================================================== */
+
+/* ---- derived tokens (same recipe for every theme) ---- */
+[data-theme] {
+  --accent-h: var(--accent-h-user, var(--accent-h-default, 265));
+  --accent: oklch(var(--accent-l) var(--accent-c) var(--accent-h));
+  --accent-strong: oklch(calc(var(--accent-l) - .06) var(--accent-c) var(--accent-h));
+  --accent-soft: color-mix(in oklab, var(--accent) 20%, transparent);
+  --accent-softer: color-mix(in oklab, var(--accent) 10%, transparent);
+  --accent-text-c: .14;
+  --accent-text: oklch(var(--accent-text-l) var(--accent-text-c) var(--accent-h));
+  --pos-soft: color-mix(in oklab, var(--pos) 16%, transparent);
+  --neg-soft: color-mix(in oklab, var(--neg) 14%, transparent);
+  --focus: var(--accent-text);
+
+  /* card / control outline (Brutal overrides these to be thick and black) */
+  --edge: var(--line);
+  --edge-strong: var(--line-strong);
+  --edge-w: 1px;
+
+  /* data-viz */
+  --viz-accent: oklch(var(--viz-l) var(--viz-c) var(--accent-h));
+  --viz-grid: color-mix(in srgb, var(--ink) 9%, transparent);
+  --viz-axis: color-mix(in srgb, var(--ink) 22%, transparent);
+  --viz-label: var(--ink-3);
+
+  --font: var(--font-ui);
+  --heading-weight: 650;
+  --heading-tracking: -.015em;
+
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+/* ---- 1. AURORA — dark glass with a living gradient glow ---- */
+[data-theme="aurora"] {
+  color-scheme: dark;
+  --meta: #060913;
+  --bg: #060913;
+  --surface: rgb(255 255 255 / .055);
+  --surface-solid: #10152b;
+  --surface-2: rgb(255 255 255 / .07);
+  --surface-3: rgb(255 255 255 / .115);
+  --line: rgb(255 255 255 / .085);
+  --line-strong: rgb(255 255 255 / .17);
+  --ink: #f2f4ff;
+  --ink-2: #b9c0dc;
+  --ink-3: #8f97b8;
+  --accent-h-default: 285;
+  --accent-l: .76;
+  --accent-c: .15;
+  --accent-text-l: .85;
+  --accent-ink: #0b0821;
+  --viz-l: .74;
+  --viz-c: .15;
+  --pos: #5fe3a1;
+  --neg: #ff7f93;
+  --warn: #ffc95c;
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / .06), 0 24px 48px -24px rgb(0 0 0 / .65);
+  --shadow-pop: 0 30px 80px -20px rgb(0 0 0 / .85), 0 0 0 1px rgb(255 255 255 / .1);
+  --card-backdrop: blur(22px) saturate(150%);
+  --chart-surface: #131832;
+}
+
+/* ---- 2. DAYLIGHT — clean, bright, precise ---- */
+[data-theme="daylight"] {
+  color-scheme: light;
+  --meta: #f3f4fa;
+  --bg: #f3f4fa;
+  --surface: #ffffff;
+  --surface-solid: #ffffff;
+  --surface-2: #f1f3f9;
+  --surface-3: #e6e9f3;
+  --line: #e2e5ef;
+  --line-strong: #cdd2e1;
+  --ink: #0e1224;
+  --ink-2: #444a63;
+  --ink-3: #676e89;
+  --accent-h-default: 265;
+  --accent-l: .57;
+  --accent-c: .2;
+  --accent-text-l: .5;
+  --accent-ink: #ffffff;
+  --viz-l: .57;
+  --viz-c: .19;
+  --pos: #0a7b3d;
+  --neg: #c42f3b;
+  --warn: #a15c00;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --shadow-card: 0 1px 2px rgb(14 18 36 / .05), 0 12px 32px -16px rgb(14 18 36 / .18);
+  --shadow-pop: 0 24px 60px -16px rgb(14 18 36 / .35), 0 0 0 1px rgb(14 18 36 / .06);
+  --card-backdrop: none;
+  --chart-surface: #ffffff;
+}
+
+/* ---- 3. LEDGER — paper, ink and serif figures, like an accountant's book ---- */
+[data-theme="ledger"] {
+  color-scheme: light;
+  --meta: #ebe3ce;
+  --bg: #ebe3ce;
+  --surface: #f8f3e4;
+  --surface-solid: #f8f3e4;
+  --surface-2: #efe8d3;
+  --surface-3: #e6ddc4;
+  --line: rgb(70 58 30 / .22);
+  --line-strong: rgb(70 58 30 / .42);
+  --ink: #221f16;
+  --ink-2: #4c4634;
+  --ink-3: #6a634d;
+  --accent-h-default: 158;
+  --accent-l: .44;
+  --accent-c: .095;
+  --accent-text-l: .4;
+  --accent-ink: #f8f3e4;
+  --viz-l: .5;
+  --viz-c: .1;
+  --pos: #1c6a3b;
+  --neg: #a02528;
+  --warn: #8a5a00;
+  --radius-s: 2px;
+  --radius-m: 4px;
+  --radius-l: 6px;
+  --shadow-card: 0 1px 0 rgb(70 58 30 / .12), 0 10px 24px -18px rgb(70 58 30 / .5);
+  --shadow-pop: 0 20px 50px -14px rgb(50 40 15 / .45), 0 0 0 1px rgb(70 58 30 / .25);
+  --card-backdrop: none;
+  --font: var(--font-serif);
+  --heading-weight: 600;
+  --heading-tracking: 0;
+  --chart-surface: #f8f3e4;
+}
+
+/* ---- 4. BRUTAL — thick outlines, hard shadows, loud and friendly ---- */
+[data-theme="brutal"] {
+  color-scheme: light;
+  --meta: #fff1cf;
+  --bg: #fff1cf;
+  --surface: #ffffff;
+  --surface-solid: #ffffff;
+  --surface-2: #fff8e6;
+  --surface-3: #ffe8ad;
+  --line: rgb(17 17 17 / .16);
+  --line-strong: rgb(17 17 17 / .4);
+  --ink: #111111;
+  --ink-2: #3b3b3b;
+  --ink-3: #595959;
+  --accent-h-default: 350;
+  --accent-l: .74;
+  --accent-c: .19;
+  --accent-text-l: .48;
+  --accent-text-c: .22;
+  --accent-ink: #111111;
+  --viz-l: .6;
+  --viz-c: .23;
+  --pos: #007a3a;
+  --neg: #d31d2b;
+  --warn: #b45c00;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --edge: #111111;
+  --edge-strong: #111111;
+  --edge-w: 2.5px;
+  --shadow-card: 5px 5px 0 #111111;
+  --shadow-pop: 8px 8px 0 #111111;
+  --card-backdrop: none;
+  --font: var(--font-round);
+  --heading-weight: 850;
+  --heading-tracking: -.02em;
+  --chart-surface: #ffffff;
+}
+
+/* ---- 5. TERMINAL — monospace CRT, phosphor glow ---- */
+[data-theme="terminal"] {
+  color-scheme: dark;
+  --meta: #040704;
+  --bg: #040704;
+  --surface: #08110a;
+  --surface-solid: #08110a;
+  --surface-2: #0d1a10;
+  --surface-3: #14261a;
+  --line: rgb(110 255 150 / .18);
+  --line-strong: rgb(110 255 150 / .4);
+  --ink: #c9f7cf;
+  --ink-2: #86c78f;
+  --ink-3: #63a56d;
+  --accent-h-default: 148;
+  --accent-l: .87;
+  --accent-c: .2;
+  --accent-text-l: .87;
+  --accent-ink: #03170a;
+  --viz-l: .8;
+  --viz-c: .19;
+  --pos: #86ffb0;
+  --neg: #ff8f8f;
+  --warn: #ffd166;
+  --radius-s: 2px;
+  --radius-m: 3px;
+  --radius-l: 4px;
+  --shadow-card: 0 0 0 1px rgb(110 255 150 / .05), 0 0 24px -8px color-mix(in srgb, var(--accent) 22%, transparent);
+  --shadow-pop: 0 0 0 1px var(--line-strong), 0 0 40px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+  --card-backdrop: none;
+  --font: var(--font-mono);
+  --heading-weight: 600;
+  --heading-tracking: 0;
+  --chart-surface: #08110a;
+}
+
+/* ---- categorical chart palette (validated with the dataviz validator; dark / light steps) ---- */
+[data-theme="aurora"],
+[data-theme="terminal"] {
+  --viz-1: #3987e5; --viz-2: #d95926; --viz-3: #199e70; --viz-4: #c98500;
+  --viz-5: #d55181; --viz-6: #008300; --viz-7: #9085e9; --viz-8: #e66767;
+  --viz-other: #6d7593;
+  --av-fg: .84; /* lightness of avatar glyphs: light on dark themes … */
+}
+[data-theme="daylight"],
+[data-theme="ledger"],
+[data-theme="brutal"] {
+  --viz-1: #2a78d6; --viz-2: #eb6834; --viz-3: #1baf7a; --viz-4: #eda100;
+  --viz-5: #e87ba4; --viz-6: #008300; --viz-7: #4a3aa7; --viz-8: #e34948;
+  --viz-other: #9b9a93;
+  --av-fg: .42; /* … dark on light ones */
+}
+
+/* ==========================================================================
+   Page-level atmosphere (only for the real document, previews don't get these)
+   ========================================================================== */
+html { background: var(--bg); }
+body { isolation: isolate; }
+
+html[data-theme="aurora"] body::before {
+  content: '';
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46vmax 34vmax at 14% 6%, oklch(.5 .2 var(--accent-h) / .42), transparent 62%),
+    radial-gradient(40vmax 30vmax at 92% 14%, oklch(.6 .14 calc(var(--accent-h) + 70) / .26), transparent 62%),
+    radial-gradient(52vmax 36vmax at 72% 96%, oklch(.5 .18 calc(var(--accent-h) - 60) / .26), transparent 62%);
+  animation: aurora-drift 48s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3vmax, 2vmax, 0) scale(1.08); }
+}
+
+html[data-theme="daylight"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(70vmax 34vmax at 50% -12%, oklch(.93 .06 var(--accent-h) / .8), transparent 70%);
+}
+
+html[data-theme="ledger"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120vmax 80vmax at 50% 40%, transparent 55%, rgb(70 50 20 / .16)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .26 0 0 0 0 .12 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+html[data-theme="brutal"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(17 17 17 / .14) 1.3px, transparent 1.4px);
+  background-size: 20px 20px;
+}
+
+html[data-theme="terminal"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background:
+    radial-gradient(120vmax 90vmax at 50% 50%, transparent 55%, rgb(0 0 0 / .5)),
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / .22) 0 1px, transparent 1px 3px);
+  opacity: .55;
+  mix-blend-mode: multiply;
+}
