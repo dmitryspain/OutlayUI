@@ -14,8 +14,8 @@ npm run build      # production-збірка
 | Збірка | Файл | Адреса API |
 |---|---|---|
 | `npm start` (development) | `src/environments/environment.ts` | `https://localhost:7016/api` |
-| `npm run build` (production, Cloudflare Pages) | `src/environments/environment.production.ts` | `https://outlay-api.onrender.com/api` |
-| `npm run build:mobile` (iOS) | `src/environments/environment.mobile.ts` | `https://outlay-api.onrender.com/api` |
+| `npm run build` (production, Cloudflare Pages) | `src/environments/environment.production.ts` | `https://outlay-api-64rz.onrender.com/api` |
+| `npm run build:mobile` (iOS) | `src/environments/environment.mobile.ts` | `https://outlay-api-64rz.onrender.com/api` |
 
 **Деплой.** Cloudflare Pages: команда збірки `npm run build`, тека виходу `dist/outlay-ui` (builder `browser`, тож
 підтеки `browser/` немає), версія Node з `.node-version`. `404.html` у збірці немає, тому Pages роздає сайт як SPA.
