@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, VERSION, computed, inject } from '@angular/core';
 import { API_BASE_URL } from '../core/config';
+import { environment } from '../../environments/environment';
 import { relativeTime } from '../core/format';
 import { errorText } from '../i18n/errors';
 import { I18nService } from '../i18n/i18n.service';
@@ -190,7 +191,7 @@ import { ThemePreviewComponent } from '../shared/theme-preview.component';
           <dt>{{ 'st.about.keys' | t }}</dt>
           <dd><kbd class="kbd">{{ mod }}</kbd> <kbd class="kbd">K</kbd> {{ 'st.about.palette' | t }} · <kbd class="kbd">/</kbd> {{ 'st.about.search' | t }} · <kbd class="kbd">Esc</kbd> {{ 'st.about.close' | t }}</dd>
           <dt>{{ 'st.about.backend' | t }}</dt>
-          <dd><code>{{ api }}</code></dd>
+          <dd><code>{{ api }}</code> ({{ build }})</dd>
           <dt>{{ 'st.about.version' | t }}</dt>
           <dd>Angular {{ ng }}</dd>
         </dl>
@@ -250,6 +251,8 @@ export class SettingsPage {
   protected readonly themes = THEMES;
   protected readonly accents = ACCENT_PRESETS;
   protected readonly api = inject(API_BASE_URL);
+  /** which build this is ('web' / 'mobile'): a technical name, so it is not translated */
+  protected readonly build = environment.name;
   protected readonly ng = VERSION.full;
   protected readonly mod = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
 

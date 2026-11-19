@@ -1,6 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Lang, currentLang, isLang } from '../i18n/lang';
+import { NativeShellService } from './native-shell.service';
+import { IS_NATIVE_APP } from './platform';
 import { AUTO_DARK, AUTO_LIGHT, THEMES, ThemeChoice, ThemeId } from './themes';
 
 export type Density = 'comfortable' | 'compact';
@@ -65,6 +67,8 @@ function load(): Stored {
 export class PrefsService {
   private readonly doc = inject(DOCUMENT);
   private readonly win = this.doc.defaultView as Window;
+  private readonly native = inject(IS_NATIVE_APP);
+  private readonly nativeShell = inject(NativeShellService);
   private readonly init = load();
 
   /** The interface language — the shared signal that the formatters and the `t` pipe read. */
@@ -150,6 +154,11 @@ export class PrefsService {
     const el = this.doc.documentElement;
     el.lang = this.lang();
     el.dataset['theme'] = this.resolvedTheme();
+    // runs on every theme change, "auto" following the system, and the cold start alike
+    this.nativeShell.syncStatusBar(this.resolvedTheme());
+    // hook for native-only CSS; iOS is the only native shell so far
+    if (this.native) el.dataset['native'] = 'ios';
+    else delete el.dataset['native'];
     el.dataset['density'] = this.density();
     el.dataset['motion'] = this.motion();
     if (this.privacy()) el.dataset['privacy'] = 'on';

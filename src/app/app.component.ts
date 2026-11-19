@@ -41,7 +41,11 @@ import { TopbarComponent } from './layout/topbar.component';
       .content-in { max-width: var(--page-max); margin-inline: auto; }
       @media (max-width: 719px) {
         .shell { grid-template-columns: minmax(0, 1fr); }
-        .content { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+        .content {
+          padding-right: max(clamp(16px, 3vw, 32px), env(safe-area-inset-right));
+          padding-bottom: calc(96px + env(safe-area-inset-bottom));
+          padding-left: max(clamp(16px, 3vw, 32px), env(safe-area-inset-left));
+        }
       }
     `,
   ],

@@ -13,6 +13,27 @@ npm run build      # production-збірка
 
 **Демо-режим** (Налаштування → Дані) підставляє згенеровані дані замість запитів до бекенду. Зручно для розробки та показу; токен і вибрана картка не змінюються.
 
+## iOS
+
+Застосунок для iPhone — це той самий Angular-код у нативній оболонці Capacitor 8: Xcode-проєкт лежить в `ios/` (залежності через Swift Package Manager, CocoaPods не потрібен), налаштування — у `capacitor.config.ts` (Bundle ID `io.github.dmitryspain.outlay`). Будь-яка зміна в `src/` діє і у вебі, і в iOS. Мінімальна версія iOS — 17.
+
+Потрібні Xcode 27 з iOS-симулятором і Node ≥ 22.
+
+```bash
+npm run ios:sync   # збірка `mobile` (адреса API: src/environments/environment.mobile.ts) + npx cap sync ios
+npm run ios:open   # відкрити проєкт у Xcode
+npm run ios:run    # зібрати й запустити; ціль: npm run ios:run -- --target <UDID> (список: npx cap run ios --list)
+```
+
+`npm run ios:sync` потрібен після кожної зміни в `src/`: застосунок бере веб-збірку з `ios/App/App/public`. Цю теку й `ios/App/App/capacitor.config.json` генерує `cap sync`, тож їх не редагуємо й не комітимо.
+
+**Запуск у симуляторі:** `npm run ios:sync` → `npm run ios:open` → у Xcode вибрати iPhone-симулятор → Run (⌘R).
+`npm run ios:run` з Xcode 27 збирає й встановлює застосунок, але завершується помилкою «There was an error opening simulator»: `native-run` з Capacitor CLI шукає Simulator.app за шляхом, якого в Xcode 27 немає. Застосунок на той момент уже встановлено, тож запустіть його вручну: `xcrun simctl launch <UDID> io.github.dmitryspain.outlay`.
+
+**Без бекенду:** Налаштування → Дані → Демо, і застосунок показує згенеровані дані. Налаштування → «Про застосунок» показує адресу API і збірку `(mobile)`. Справжній бекенд на Маку симулятор бачить на `https://localhost:7016`, якщо довіряє dev-сертифікату (README бекенду, розділ «Доступ з телефона (iOS)»).
+
+**Підпис:** для симулятора не потрібен. На свій iPhone застосунок ставиться з Xcode через безкоштовну Personal Team (Xcode → Settings → Accounts → Apple ID; таргет App → Signing & Capabilities → Team). Профіль діє 7 днів, тож щотижня знову Product → Run. Застосунок перед цим не видаляйте, бо разом із ним зникнуть його дані.
+
 ## Структура
 
 ```

@@ -1,9 +1,10 @@
 import { InjectionToken } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 /** The one place that knows where the backend lives (it used to be hard-coded in nine spots). */
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
   providedIn: 'root',
-  factory: () => 'https://localhost:7016/api',
+  factory: () => environment.apiBaseUrl,
 });
 
 /** How often the balance is refreshed in the background. */

@@ -68,8 +68,10 @@ import { LogoComponent } from '../shared/logo.component';
     `
       :host { display: block; position: sticky; top: 0; z-index: 25; }
       .bar {
-        display: flex; align-items: center; gap: 12px; height: var(--bar-h);
-        padding: 0 clamp(16px, 3vw, 32px);
+        display: flex; align-items: center; gap: 12px;
+        /* safe areas: below the status bar / Dynamic Island, clear of the notch in landscape; env() is 0 without them */
+        height: calc(var(--bar-h) + env(safe-area-inset-top));
+        padding: env(safe-area-inset-top) max(clamp(16px, 3vw, 32px), env(safe-area-inset-right)) 0 max(clamp(16px, 3vw, 32px), env(safe-area-inset-left));
         background: color-mix(in srgb, var(--bg) 72%, transparent);
         -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
       }
