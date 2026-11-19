@@ -1,6 +1,6 @@
 /**
  * Build settings for the iOS app (`npm run build:mobile`); same fields as `environment.ts`.
- * localhost works in the iOS Simulator, which shares the Mac's network. For a physical iPhone, put the backend's
- * stable HTTPS address here (see the backend README, section "Доступ з телефона (iOS)").
+ * The app talks to the deployed API on Render (the simulator too); its CORS list allows capacitor://localhost.
+ * To try the app against the backend on this Mac, put `https://localhost:7016/api` here for that build only.
  */
-export const environment = { name: 'mobile', apiBaseUrl: 'https://localhost:7016/api' };
+export const environment = { name: 'mobile', apiBaseUrl: 'https://outlay-api.onrender.com/api' };

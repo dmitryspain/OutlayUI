@@ -9,7 +9,17 @@ npm test           # юніт-тести (Karma); без вікна: npx ng test
 npm run build      # production-збірка
 ```
 
-Бекенд (`OutlayApp`) очікується на `https://localhost:7016/api`. Адреса задана в одному місці: `src/app/core/config.ts`.
+Адреса бекенду (`OutlayApp`) залежить від збірки. Код бере її лише через `API_BASE_URL` у `src/app/core/config.ts`.
+
+| Збірка | Файл | Адреса API |
+|---|---|---|
+| `npm start` (development) | `src/environments/environment.ts` | `https://localhost:7016/api` |
+| `npm run build` (production, Cloudflare Pages) | `src/environments/environment.production.ts` | `https://outlay-api.onrender.com/api` |
+| `npm run build:mobile` (iOS) | `src/environments/environment.mobile.ts` | `https://outlay-api.onrender.com/api` |
+
+**Деплой.** Cloudflare Pages: команда збірки `npm run build`, тека виходу `dist/outlay-ui` (builder `browser`, тож
+підтеки `browser/` немає), версія Node з `.node-version`. `404.html` у збірці немає, тому Pages роздає сайт як SPA.
+Бекенд пускає лише origin `https://outlay.pages.dev` (README бекенду, розділ «Deployment»).
 
 **Демо-режим** (Налаштування → Дані) підставляє згенеровані дані замість запитів до бекенду. Зручно для розробки та показу; токен і вибрана картка не змінюються.
 
@@ -30,7 +40,7 @@ npm run ios:run    # зібрати й запустити; ціль: npm run ios
 **Запуск у симуляторі:** `npm run ios:sync` → `npm run ios:open` → у Xcode вибрати iPhone-симулятор → Run (⌘R).
 `npm run ios:run` з Xcode 27 збирає й встановлює застосунок, але завершується помилкою «There was an error opening simulator»: `native-run` з Capacitor CLI шукає Simulator.app за шляхом, якого в Xcode 27 немає. Застосунок на той момент уже встановлено, тож запустіть його вручну: `xcrun simctl launch <UDID> io.github.dmitryspain.outlay`.
 
-**Без бекенду:** Налаштування → Дані → Демо, і застосунок показує згенеровані дані. Налаштування → «Про застосунок» показує адресу API і збірку `(mobile)`. Справжній бекенд на Маку симулятор бачить на `https://localhost:7016`, якщо довіряє dev-сертифікату (README бекенду, розділ «Доступ з телефона (iOS)»).
+**Без бекенду:** Налаштування → Дані → Демо, і застосунок показує згенеровані дані. Налаштування → «Про застосунок» показує адресу API і збірку `(mobile)`. Збірка `mobile` ходить на задеплоєний API. Щоб перевірити застосунок проти бекенду на Маку, тимчасово впишіть у `environment.mobile.ts` адресу `https://localhost:7016/api`: симулятор її бачить, якщо довіряє dev-сертифікату (README бекенду, розділ «Доступ з телефона (iOS)»).
 
 **Підпис:** для симулятора не потрібен. На свій iPhone застосунок ставиться з Xcode через безкоштовну Personal Team (Xcode → Settings → Accounts → Apple ID; таргет App → Signing & Capabilities → Team). Профіль діє 7 днів, тож щотижня знову Product → Run. Застосунок перед цим не видаляйте, бо разом із ним зникнуть його дані.
 
