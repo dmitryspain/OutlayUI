@@ -51,6 +51,15 @@ describe('demoInterceptor', () => {
     backend.expectOne(`${environment.apiBaseUrl}/clients/cards`).flush([]);
   }));
 
+  it('in demo mode still sends connecting a token and signing out to the backend', () => {
+    const base = setup(true);
+    http.post(`${base}/auth/session`, { token: 'monobank' }).subscribe();
+    http.delete(`${base}/auth/session`).subscribe();
+    const calls = backend.match(`${base}/auth/session`);
+    expect(calls.map(c => c.request.method)).toEqual(['POST', 'DELETE']);
+    calls.forEach(c => c.flush({}));
+  });
+
   it('does nothing when demo mode is off', () => {
     const base = setup(false);
     let cards: unknown;

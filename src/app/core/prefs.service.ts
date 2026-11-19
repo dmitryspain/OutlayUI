@@ -33,14 +33,15 @@ interface Stored {
 }
 
 const KEY = 'outlay.prefs.v1';
+/** A first visit: English, the Terminal theme, and the demo data until a Monobank token is connected. */
 const DEFAULTS: Stored = {
-  lang: 'uk',
-  theme: 'auto',
+  lang: 'en',
+  theme: 'terminal',
   accent: null,
   density: 'comfortable',
   privacy: false,
   motion: 'system',
-  demo: false,
+  demo: true,
   demoCard: '',
   transfers: true,
   period: { preset: '30d' },
@@ -53,9 +54,9 @@ function load(): Stored {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Stored>;
     const s = { ...DEFAULTS, ...raw };
-    if (s.theme !== 'auto' && !THEMES.some(t => t.id === s.theme)) s.theme = 'auto';
+    if (s.theme !== 'auto' && !THEMES.some(t => t.id === s.theme)) s.theme = DEFAULTS.theme;
     if (typeof s.accent !== 'number') s.accent = null;
-    if (!isLang(s.lang)) s.lang = 'uk';
+    if (!isLang(s.lang)) s.lang = DEFAULTS.lang;
     return s;
   } catch {
     return { ...DEFAULTS };

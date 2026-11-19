@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="uk" data-theme="aurora">
+<html lang="en" data-theme="terminal">
 <head>
   <meta charset="utf-8">
   <title>Outlay</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#060913">
-  <meta name="description" content="Outlay — особиста аналітика витрат за карткою Monobank">
+  <meta name="theme-color" content="#040704">
+  <meta name="description" content="Outlay — personal spending analytics for your Monobank card">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="any">
   <script>
@@ -17,8 +17,9 @@
         var p = JSON.parse(localStorage.getItem('outlay.prefs.v1') || '{}');
         var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         var d = document.documentElement;
-        d.dataset.theme = p.theme && p.theme !== 'auto' ? p.theme : (dark ? 'aurora' : 'daylight');
-        d.lang = p.lang === 'en' ? 'en' : 'uk';
+        var theme = p.theme || 'terminal'; /* the default of PrefsService */
+        d.dataset.theme = theme !== 'auto' ? theme : (dark ? 'aurora' : 'daylight');
+        d.lang = p.lang === 'uk' ? 'uk' : 'en';
         if (typeof p.accent === 'number') d.style.setProperty('--accent-h-user', String(p.accent));
         if (p.density) d.dataset.density = p.density;
         if (p.privacy) d.dataset.privacy = 'on';

@@ -8,6 +8,8 @@ import { DEMO_CARDS, demoTransactions } from './demo-data';
 /**
  * While demo mode is on, backend calls are answered locally with generated data
  * (with a little artificial latency, so loading states are visible). Otherwise it does nothing.
+ * Connecting a token and signing out always reach the backend: demo mode is on by default, and connecting
+ * from it is how a visitor switches to their own data.
  */
 export const demoInterceptor: HttpInterceptorFn = (req, next) => {
   const prefs = inject(PrefsService);
@@ -23,7 +25,6 @@ export const demoInterceptor: HttpInterceptorFn = (req, next) => {
       return reply(DEMO_CARDS);
     case '/clients/balance/refresh':
     case '/transactions/latest':
-    case '/auth/session':
       return reply({});
     case '/clients/webhook':
       return reply({ configured: false, enabled: false });
